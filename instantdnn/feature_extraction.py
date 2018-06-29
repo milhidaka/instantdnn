@@ -14,6 +14,7 @@ import chainer
 import chainercv.utils
 import chainercv.transforms
 import chainercv.links.model.resnet
+from instantdnn.squeezenet import SqueezeNetFeatureExtactor
 
 
 def load_config(work_dir: str):
@@ -24,8 +25,9 @@ def load_config(work_dir: str):
 class FeatureExtractor:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
-        self.model = chainercv.links.model.resnet.ResNet50(pretrained_model="imagenet", arch="he")
-        self.model.pick = "pool5"  # =>2048dim
+        self.model = SqueezeNetFeatureExtactor()
+        # self.model = chainercv.links.model.resnet.ResNet50(pretrained_model="imagenet", arch="he")
+        # self.model.pick = "pool5"  # =>2048dim
 
     def extract(self, image_iterator):
         feats = []
@@ -34,7 +36,7 @@ class FeatureExtractor:
             with chainer.using_config("enable_backprop", False):
                 for image, params in image_iterator:
                     # TODO: バッチで抽出
-                    feat = self.model(image[np.newaxis, ...] - self.model.mean)  # (1, 2048)
+                    feat = self.model(image[np.newaxis, ::-1, :, :] - self.model.mean)  # (1, 2048)
                     feats.append(feat.data[0, ...])
                     params_all.append(params)
         np.save(os.path.join(self.output_dir, "feat.npy"), np.array(feats, dtype=np.float32))
@@ -53,14 +55,15 @@ class ImageLoader:
             for ext in ["jpg", "jpeg", "png", "gif"]:
                 file_paths.extend(glob.glob(os.path.join(self.work_dir, label_info["dir"], "*." + ext)))
             for file_path in file_paths:
-                file_instance_id = hashlib.md5(file_path.encode("utf-8")).hexdigest()  # augmentaionにかかわらず1つの画像を示すなんらかのID
+                file_instance_id = hashlib.md5(
+                    file_path.encode("utf-8")).hexdigest()  # augmentaionにかかわらず1つの画像を示すなんらかのID
                 for image, augment_params in self._load_augment_image(file_path):
                     yield image, {"label": label_info["id"], "instance": file_instance_id, "augment": augment_params}
 
     def _load_augment_image(self, path: str):
         image_raw = chainercv.utils.read_image(path)  # type: np.ndarray
         augment_params = {}
-        image = chainercv.transforms.resize(image_raw, (224, 224))
+        image = chainercv.transforms.resize(image_raw, (227, 227))
         yield image, augment_params
         augment_params = {"flip": True}
         image = image[:, :, ::-1]

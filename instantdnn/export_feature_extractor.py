@@ -13,14 +13,16 @@ import chainercv.transforms
 import chainercv.links.model.resnet
 from webdnn.backend import generate_descriptor
 from webdnn.frontend.chainer import ChainerConverter
+from instantdnn.squeezenet import SqueezeNetFeatureExtactor
 
 
 def export_feature_extractor(output_dir: str):
-    model = chainercv.links.model.resnet.ResNet50(pretrained_model="imagenet", arch="he")
-    model.pick = "pool5"  # =>2048dim
+    # model = chainercv.links.model.resnet.ResNet50(pretrained_model="imagenet", arch="he")
+    # model.pick = "pool5"  # =>2048dim
+    model = SqueezeNetFeatureExtactor()
     with chainer.using_config("train", False):
         with chainer.using_config("enable_backprop", True):
-            nn_input = chainer.Variable(np.zeros((1, 3, 224, 224), dtype=np.float32))
+            nn_input = chainer.Variable(np.zeros((1, 3, 227, 227), dtype=np.float32))
             nn_output = model(nn_input)
             graph = ChainerConverter().convert([nn_input], [nn_output])
     for backend in ["webgpu", "webgl", "webassembly"]:
