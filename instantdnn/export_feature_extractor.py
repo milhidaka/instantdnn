@@ -31,13 +31,7 @@ def export_feature_extractor(output_dir: str):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("work")
-    args = parser.parse_args()
-    work_dir = args.work
-    output_dir = os.path.join(work_dir, "output", "graph_descriptor")
-    os.makedirs(output_dir, exist_ok=True)
-    export_feature_extractor(output_dir)
+    export_feature_extractor("resource/assets/instantdnn/common/graph_descriptor")
 
 
 if __name__ == "__main__":

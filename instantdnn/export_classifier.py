@@ -1,13 +1,13 @@
 """
-特徴量から画像分類モデル学習
+識別機とメタデータをjsファイルに出力
 """
 
 import os
 import numpy as np
 import pickle
 import argparse
+import json
 import sklearn.svm
-from sklearn_porter import Porter
 
 
 def load_model(process_dir: str):
@@ -16,10 +16,16 @@ def load_model(process_dir: str):
 
 
 def export_model(output_dir: str, model):
-    porter = Porter(model, language="js")
-    script = porter.export(embed_data=True)
-    with open(os.path.join(output_dir, "classifier.js"), "w") as f:
-        f.write(script)
+    with open("resource/template/instantdnn.js") as f:
+        js_template = f.read()
+    weight_list = model.coef_.tolist()
+    bias_list = model.intercept_.tolist()
+    js_template = js_template.replace("\"INSTANTDNN_WEIGHT\"", json.dumps(weight_list))
+    js_template = js_template.replace("\"INSTANTDNN_BIAS\"", json.dumps(bias_list))
+    model_dir = os.path.join(output_dir, "instantdnn", "model")
+    os.makedirs(model_dir, exist_ok=True)
+    with open(os.path.join(model_dir, "instantdnn.js"), "w") as f:
+        f.write(js_template)
 
 
 def main():
