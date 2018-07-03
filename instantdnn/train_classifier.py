@@ -6,7 +6,7 @@ import os
 import numpy as np
 import pickle
 import argparse
-import sklearn.svm
+import sklearn.linear_model
 import sklearn.model_selection
 
 
@@ -40,7 +40,7 @@ def optimize_params(feats, labels, groups):
         scores = []
         model = None
         for train_idxs, test_idxs in group_kfold.split(feats, groups=groups):
-            model = sklearn.svm.LinearSVC(C=c)
+            model = sklearn.linear_model.LogisticRegression(C=c, multi_class="multinomial", solver="newton-cg")
             model.fit(feats[train_idxs], labels[train_idxs])
             score = model.score(feats[test_idxs], labels[test_idxs])
             print("score", score)
