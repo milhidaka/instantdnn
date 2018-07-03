@@ -3,6 +3,7 @@ class InstantDNN {
         this.runner = null;
         this._weight = "INSTANTDNN_WEIGHT";
         this._bias = "INSTANTDNN_BIAS";
+        this.labels = "INSTANTDNN_LABELS";
     }
 
     async load(graph_descrptor_dir) {

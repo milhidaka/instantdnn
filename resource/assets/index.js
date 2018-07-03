@@ -12,6 +12,7 @@ window.onload = async () => {
 
     document.getElementById("start_classify").onclick = async () => {
         let result = await idnn.classify_from_canvas(document.getElementById('target'));
+        console.log(idnn.labels);
         console.log(result);
     }
 }

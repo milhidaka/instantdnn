@@ -15,11 +15,8 @@ import chainercv.utils
 import chainercv.transforms
 import chainercv.links.model.resnet
 from instantdnn.squeezenet import SqueezeNetFeatureExtactor
+from instantdnn.util import load_config
 
-
-def load_config(work_dir: str):
-    with open(os.path.join(work_dir, "instantdnn.yaml")) as f:
-        return yaml.load(f)
 
 
 class FeatureExtractor:
