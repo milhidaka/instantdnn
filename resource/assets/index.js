@@ -27,7 +27,7 @@ window.onload = async () => {
         navigator.getUserMedia({ audio: false, video: { width: 227, height: 227 } },
             function(stream) {
                var video = document.getElementById('camera');
-               video.src = window.URL.createObjectURL(stream);
+               video.srcObject = stream;
                video.onloadedmetadata = function(e) {
                  video.play();
                  camera_enabled = true;
