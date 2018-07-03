@@ -18,7 +18,6 @@ from instantdnn.squeezenet import SqueezeNetFeatureExtactor
 from instantdnn.util import load_config
 
 
-
 class FeatureExtractor:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
@@ -47,6 +46,7 @@ class ImageLoader:
         self.config = config
 
     def __iter__(self):
+        ctr = 0
         for label_info in self.config["labels"]:
             file_paths = []
             for ext in ["jpg", "jpeg", "png", "gif"]:
@@ -56,6 +56,9 @@ class ImageLoader:
                     file_path.encode("utf-8")).hexdigest()  # augmentaionにかかわらず1つの画像を示すなんらかのID
                 for image, augment_params in self._load_augment_image(file_path):
                     yield image, {"label": label_info["id"], "instance": file_instance_id, "augment": augment_params}
+                    ctr += 1
+                    if ctr % 10 == 0:
+                        print(f"processed {ctr} images")
 
     def _load_augment_image(self, path: str):
         image_raw = chainercv.utils.read_image(path)  # type: np.ndarray
