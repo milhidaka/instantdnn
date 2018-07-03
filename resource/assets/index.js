@@ -11,8 +11,11 @@ window.onload = async () => {
     }
 
     document.getElementById("start_classify").onclick = async () => {
-        let result = await idnn.classify_from_canvas(document.getElementById('target'));
-        console.log(idnn.labels);
-        console.log(result);
+        let probs = await idnn.classify_from_canvas(document.getElementById('target'));
+        let result = "";
+        for (let i = 0; i < probs.length; i++) {
+            result += `${idnn.labels[i]}: ${probs[i] * 100 | 0}% `;
+        }
+        document.getElementById("result").innerText = result;
     }
 }

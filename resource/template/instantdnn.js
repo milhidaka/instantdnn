@@ -28,11 +28,11 @@ class InstantDNN {
 
         let feature = y.toActual();
 
-        let scores = this.calculate_score(feature);
-        return scores;
+        let probs = this.calculate_prob(feature);
+        return probs;
     }
 
-    calculate_score(feat) {
+    calculate_prob(feat) {
         let labels = this._weight.length;
         let dims = this._weight[0].length;
         let scores = [];
@@ -45,6 +45,16 @@ class InstantDNN {
             scores.push(sum);
         }
 
-        return scores;
+        let max_score = Math.max(...scores);
+        let scores_exp = [];
+        let scores_exp_sum = 0;
+        for (let label = 0; label < labels; label++) {
+            let exp = Math.exp(scores[label] - max_score);
+            scores_exp_sum += exp;
+            scores_exp.push(exp);
+        }
+
+        let probs = scores_exp.map((v) => v / scores_exp_sum);
+        return probs;
     }
 }
