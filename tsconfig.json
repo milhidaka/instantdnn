@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "js",
+    "lib":["dom","es2017"],
+    "target": "es2017"
+  },
+  "files": [
+    "src/main.ts",
+    "src/renderer.ts"
+  ]
+}
