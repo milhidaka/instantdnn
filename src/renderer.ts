@@ -1,16 +1,17 @@
 import { ipcRenderer } from "electron";
 declare const WebDNN: any;
+let runner: any;
 
 async function load_webdnn() {
   try {
-    let runner = await WebDNN.load("../resource/assets/instantdnn/common/graph_descriptor");
+    runner = await WebDNN.load("../resource/assets/instantdnn/common/graph_descriptor");
     alert(runner.backendName);
   } catch (ex) {
     alert(ex);
   }
 }
 
-// load_webdnn();
+load_webdnn();
 
 function augmentimage() {
   let prep_canvas = document.getElementById("prepare-image") as HTMLCanvasElement;
@@ -35,6 +36,16 @@ window.addEventListener("load", (event) => {
   };
   document.getElementById("augmentimage").onclick = () => {
     augmentimage();
+  };
+  document.getElementById("extractfeat").onclick = async () => {
+    let image = runner.inputs[0]; 
+    let feat = runner.outputs[0];
+    image.set(await WebDNN.Image.getImageArray(document.getElementById("dnn-input-image") as HTMLCanvasElement));
+
+    // Run
+    await runner.run(); 
+
+    alert("feat: " + feat.toActual()[0]);
   };
 });
 
