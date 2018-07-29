@@ -12,6 +12,15 @@
     Chromium <script>document.write(process.versions.chrome)</script>,
     and Electron <script>document.write(process.versions.electron)</script>.
 
+    <button type="button" id="loadimage">load image</button>
+    <button type="button" id="augmentimage">augment</button>
+    <br>
+    dnn input:
+    <canvas id="dnn-input-image" width="224" height="224"></canvas>
+    <br>
+    prepare image:
+    <canvas id="prepare-image" width="256" height="256"></canvas>
+
     <script>
       // You can also require other files to run in this process
       require('../js/renderer.js')

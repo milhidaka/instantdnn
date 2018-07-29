@@ -1,5 +1,6 @@
 // Modules to control application life and create native browser window
-import {app, BrowserWindow} from "electron";
+import {app, BrowserWindow, ipcMain} from "electron";
+import * as fs from "fs";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -48,3 +49,10 @@ app.on('activate', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+ipcMain.on("load-image", (event: any, path: string) => {
+  let image_rawdata = fs.readFileSync(path);
+  let image_base64 = "data:image/jpeg;base64," + image_rawdata.toString("base64");
+  event.sender.send("image-loaded", image_base64);
+  console.log("sent image");
+});
