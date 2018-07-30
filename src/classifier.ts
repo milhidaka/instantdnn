@@ -78,7 +78,7 @@ export class Classifier {
     // returns softmax cross entropy loss
     let softmax = new Float32Array(this.n_classes);
     this.forward(feature, softmax);
-    let loss = -Math.log(softmax[label]);
+    let loss = -Math.log(softmax[label] + 1e-20);//avoid NaN
 
     // calculate gradient
     softmax[label] -= 1;
