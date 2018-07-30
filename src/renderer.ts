@@ -68,6 +68,9 @@ window.addEventListener("load", (event) => {
   document.getElementById("augmentimage").onclick = () => {
     augmentimage();
   };
+  document.getElementById("prepare").onclick = () => {
+    ipcRenderer.send("prepare");
+  };
   document.getElementById("extractfeat").onclick = async () => {
     let feat = await extract_feature();
     alert(`feat[0] = ${feat[0]}`);

@@ -1,7 +1,7 @@
 // Modules to control application life and create native browser window
 import { app, BrowserWindow, ipcMain } from "electron";
 import * as fs from "fs";
-import { resolve } from "path";
+import * as path from "path";
 import { shuffle, permutation } from "./util";
 import { Classifier } from "./classifier";
 import { copySync, mkdirsSync } from "fs-extra";
@@ -106,7 +106,7 @@ ipcMain.on("batch-extraction", async (event: any) => {
   for (let imgid = 0; imgid < files_data.imgid2path.length; imgid++) {
     let imgpath = files_data.imgid2path[imgid];
     console.log(imgpath);
-    let image_rawdata = fs.readFileSync(work_root + "/" + imgpath);
+    let image_rawdata = fs.readFileSync(imgpath);
     let image_base64 = "data:image/jpeg;base64," + image_rawdata.toString("base64");
     let features = await extract_feature(imgid, image_base64);
     for (let i = 0; i < features.length; i++) {
@@ -173,6 +173,56 @@ ipcMain.on("export", async (event: any) => {
     mkdirsSync(work_root + "/output/instantdnn/model");
     fs.writeFileSync(work_root + "/output/instantdnn/model/instantdnn.js", js_template, "utf8");
 
+    console.log("done");
+  } catch (ex) {
+    console.error(ex.stack);
+  }
+});
+
+interface InstantDNNConfig {
+  labels: [{name: string, dir: string}]
+}
+
+
+ipcMain.on("prepare", async (event: any) => {
+  try {
+    let config = load_json(work_root + "/instantdnn.json") as InstantDNNConfig;
+    let labels: [number, string][] = [];
+    let imgid = 0;
+    let imgid2label: number[] = [];
+    let imgid2path: string[] = [];
+    for (let label_idx = 0; label_idx < config.labels.length; label_idx++) {
+      let label_info = config.labels[label_idx];
+      labels.push([label_idx, label_info.name]);
+      let images_dir: string;
+      if (path.isAbsolute(label_info.dir)) {
+        images_dir = label_info.dir;
+      } else {
+        images_dir = path.join(work_root, label_info.dir);
+      }
+      let files = fs.readdirSync(images_dir, "utf8");
+      let extensions = [".jpg", ".jpeg", ".png"];
+      let image_paths = files.filter((fn) => {
+        fn = fn.toLowerCase();
+        for (const ext of extensions) {
+          if (fn.endsWith(ext)) {
+            return true;
+          }
+        }
+        return false;
+      }).map((fn) => path.join(images_dir, fn));
+      for (const image_path of image_paths) {
+        imgid2label.push(label_idx);
+        imgid2path.push(image_path);
+        imgid++;
+      }
+    }
+
+    let files_data: DatasetFiles = {
+      labels, imgid2label, imgid2path
+    };
+    save_json(work_root + "/files.json", files_data);
+    console.log(`total ${imgid} files`);
     console.log("done");
   } catch (ex) {
     console.error(ex.stack);
