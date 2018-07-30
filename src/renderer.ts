@@ -76,6 +76,10 @@ window.addEventListener("load", (event) => {
     // start batch extraction
     ipcRenderer.send("batch-extraction");
   };
+  document.getElementById("training").onclick = () => {
+    // start training
+    ipcRenderer.send("training");
+  };
 });
 
 ipcRenderer.on("image-loaded", (event: any, image_base64: string) => {

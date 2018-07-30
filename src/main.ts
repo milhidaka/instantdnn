@@ -2,6 +2,8 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import * as fs from "fs";
 import { resolve } from "path";
+import { shuffle, permutation } from "./util";
+import { Classifier } from "./classifier";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -78,11 +80,26 @@ async function extract_feature(image_key: number, image_base64: string): Promise
   });
 }
 
-let work_root = "/Users/hidaka/miljs/idnn/work1"
+function save_json(path: string, obj: any) {
+  fs.writeFileSync(path, JSON.stringify(obj), "utf8");
+}
+
+function load_json(path: string): any {
+  return JSON.parse(fs.readFileSync(path, "utf8"));
+}
+
+let work_root = "/Users/hidaka/miljs/idnn/work1";
+
+interface DatasetFiles {
+  labels: [number, string][];
+  imgid2label: number[];
+  imgid2path: string[];
+}
+
 ipcMain.on("batch-extraction", async (event: any) => {
   console.log("batch extraction start");
   // entrypoint of batch feature extraction
-  let files_data = JSON.parse(fs.readFileSync(work_root + "/files.json", "utf8"));
+  let files_data = load_json(work_root + "/files.json") as DatasetFiles;
   let all_features = [];
   let feature_imgids = [];
   for (let imgid = 0; imgid < files_data.imgid2path.length; imgid++) {
@@ -96,9 +113,45 @@ ipcMain.on("batch-extraction", async (event: any) => {
       feature_imgids.push(imgid);
     }
   }
-  fs.writeFileSync(work_root + "/feature_imgids.json",
-    JSON.stringify(feature_imgids), "utf8");
-  fs.writeFileSync(work_root + "/features.json",
-    JSON.stringify(all_features), "utf8");
-    console.log("batch extraction finished");
+  save_json(work_root + "/feature_imgids.json", feature_imgids);
+  save_json(work_root + "/features.json", all_features);
+  console.log("batch extraction finished");
+});
+
+
+ipcMain.on("training", async (event: any) => {
+  try {
+    console.log("start training");
+    let all_features = load_json(work_root + "/features.json") as number[][];
+    let feature_imgids = load_json(work_root + "/feature_imgids.json") as number[];
+
+    let files_data = load_json(work_root + "/files.json") as DatasetFiles;
+
+    let n_images = files_data.imgid2label.length;
+    let n_train = (n_images * 0.8) | 0;
+    let perm_imgids = permutation(n_images);//imgids in top n_train elements are for training
+    let train_imgids = new Set(perm_imgids.slice(0, n_train));
+    // let test_imgids = new Set(perm_imgids.slice(n_train));
+    let train_idxs: number[] = [];
+    let test_idxs: number[] = [];
+    let sample_labels: number[] = [];
+    for (let idx = 0; idx < feature_imgids.length; idx++) {
+      let imgid = feature_imgids[idx];
+      sample_labels.push(files_data.imgid2label[imgid]);
+      if (train_imgids.has(imgid)) {
+        train_idxs.push(idx);
+      } else {
+        test_idxs.push(idx);
+      }
+    }
+
+    let classifier = new Classifier(512, files_data.labels.length);
+    classifier.train(all_features, sample_labels, train_idxs, test_idxs);
+    console.log("exporting model");
+    let model_params = classifier.export_model();
+    save_json(work_root + "/weight.json", model_params);
+    console.log("done");
+  } catch (ex) {
+    console.error(ex.stack);
+  }
 });
