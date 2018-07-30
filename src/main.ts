@@ -160,9 +160,9 @@ ipcMain.on("training", async (event: any) => {
 ipcMain.on("export", async (event: any) => {
   try {
     console.log("exporting assets");
-    copySync("resource/assets", work_root + "/output");
+    copySync(__dirname + "/../resource/assets", work_root + "/output");
     console.log("exporting model");
-    let js_template = fs.readFileSync("resource/template/instantdnn.js", "utf8");
+    let js_template = fs.readFileSync(__dirname + "/../resource/template/instantdnn.js", "utf8");
     let model_params = load_json(work_root + "/weight.json");
 
     let files_data = load_json(work_root + "/files.json") as DatasetFiles;
