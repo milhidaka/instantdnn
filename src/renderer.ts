@@ -80,6 +80,10 @@ window.addEventListener("load", (event) => {
     // start training
     ipcRenderer.send("training");
   };
+  document.getElementById("export").onclick = () => {
+    // start training
+    ipcRenderer.send("export");
+  };
 });
 
 ipcRenderer.on("image-loaded", (event: any, image_base64: string) => {

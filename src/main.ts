@@ -4,6 +4,7 @@ import * as fs from "fs";
 import { resolve } from "path";
 import { shuffle, permutation } from "./util";
 import { Classifier } from "./classifier";
+import { copySync, mkdirsSync } from "fs-extra";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -150,6 +151,28 @@ ipcMain.on("training", async (event: any) => {
     console.log("exporting model");
     let model_params = classifier.export_model();
     save_json(work_root + "/weight.json", model_params);
+    console.log("done");
+  } catch (ex) {
+    console.error(ex.stack);
+  }
+});
+
+ipcMain.on("export", async (event: any) => {
+  try {
+    console.log("exporting assets");
+    copySync("resource/assets", work_root + "/output");
+    console.log("exporting model");
+    let js_template = fs.readFileSync("resource/template/instantdnn.js", "utf8");
+    let model_params = load_json(work_root + "/weight.json");
+
+    let files_data = load_json(work_root + "/files.json") as DatasetFiles;
+    let labels: string[] = files_data.labels.map((item) => item[1]);
+    js_template = js_template.replace("\"INSTANTDNN_WEIGHT\"", JSON.stringify(model_params["weight"]));
+    js_template = js_template.replace("\"INSTANTDNN_BIAS\"", JSON.stringify(model_params["bias"]));
+    js_template = js_template.replace("\"INSTANTDNN_LABELS\"", JSON.stringify(labels));
+    mkdirsSync(work_root + "/output/instantdnn/model");
+    fs.writeFileSync(work_root + "/output/instantdnn/model/instantdnn.js", js_template, "utf8");
+
     console.log("done");
   } catch (ex) {
     console.error(ex.stack);

@@ -22,7 +22,11 @@
   },
   "homepage": "https://github.com/milhidaka/instantdnn#readme",
   "devDependencies": {
+    "@types/fs-extra": "^5.0.4",
     "electron": "^2.0.4",
     "electron-packager": "^12.1.0"
+  },
+  "dependencies": {
+    "fs-extra": "^7.0.0"
   }
 }
